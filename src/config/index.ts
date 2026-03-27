@@ -4,6 +4,7 @@ dotenv.config();
 
 export interface Config {
   token: string;
+  username?: string;
   workspace: string;
   apiUrl: string;
 }
@@ -17,6 +18,7 @@ export function loadConfig(): Config {
 
   return {
     token,
+    username: process.env.BITBUCKET_USERNAME,
     workspace,
     apiUrl: process.env.BITBUCKET_API_URL ?? 'https://api.bitbucket.org/2.0',
   };

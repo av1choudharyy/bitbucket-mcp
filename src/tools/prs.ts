@@ -45,7 +45,7 @@ function mapPRSummary(pr: BitbucketPR): PRSummary {
     id: pr.id,
     title: pr.title,
     state: pr.state,
-    author: pr.author.display_name,
+    author: pr.author?.display_name ?? 'unknown',
     source_branch: pr.source.branch.name,
     dest_branch: pr.destination.branch.name,
     created_on: pr.created_on,
@@ -98,7 +98,7 @@ export async function getPullRequest(
   return {
     ...mapPRSummary(pr),
     description: pr.description,
-    reviewers: pr.reviewers.map((r: BitbucketUser) => r.display_name),
+    reviewers: pr.reviewers?.map((r: BitbucketUser) => r.display_name ?? 'unknown') ?? [],
     comment_count: pr.comment_count,
     task_count: pr.task_count,
   };
@@ -131,7 +131,7 @@ export async function createPullRequest(
   return {
     ...mapPRSummary(pr),
     description: pr.description,
-    reviewers: pr.reviewers.map((r: BitbucketUser) => r.display_name),
+    reviewers: pr.reviewers?.map((r: BitbucketUser) => r.display_name ?? 'unknown') ?? [],
     comment_count: pr.comment_count,
     task_count: pr.task_count,
   };
@@ -161,7 +161,7 @@ export async function updatePullRequest(
   return {
     ...mapPRSummary(pr),
     description: pr.description,
-    reviewers: pr.reviewers.map((r: BitbucketUser) => r.display_name),
+    reviewers: pr.reviewers?.map((r: BitbucketUser) => r.display_name ?? 'unknown') ?? [],
     comment_count: pr.comment_count,
     task_count: pr.task_count,
   };

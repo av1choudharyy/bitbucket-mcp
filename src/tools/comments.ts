@@ -22,7 +22,7 @@ function mapComment(c: BitbucketComment): CommentInfo {
     id: c.id,
     type: c.inline ? 'inline' : 'general',
     content: c.content.raw,
-    author: c.author.display_name,
+    author: c.author?.display_name ?? 'unknown',
     created_on: c.created_on,
     inline: c.inline
       ? { path: c.inline.path, from: c.inline.from, to: c.inline.to }

@@ -5,10 +5,16 @@ import type { PaginatedResponse } from './types';
 export type ApiClient = AxiosInstance;
 
 export function createClient(config: Config): ApiClient {
+  // Atlassian API tokens use Basic auth (username:token).
+  // Bitbucket HTTP access tokens use Bearer auth (no username needed).
+  const authHeader = config.username
+    ? `Basic ${Buffer.from(`${config.username}:${config.token}`).toString('base64')}`
+    : `Bearer ${config.token}`;
+
   const instance = axios.create({
     baseURL: config.apiUrl,
     headers: {
-      Authorization: `Bearer ${config.token}`,
+      Authorization: authHeader,
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },

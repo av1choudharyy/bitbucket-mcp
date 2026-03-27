@@ -29,7 +29,7 @@ export async function approvePullRequest(
   );
   return {
     approved: response.data.approved,
-    user: response.data.user.display_name,
+    user: response.data.user?.display_name ?? null,
   };
 }
 
