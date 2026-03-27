@@ -55,7 +55,8 @@ export async function paginateAll<T>(
   let pagesFetched = 0;
 
   while (url && pagesFetched < maxPages) {
-    const response = await client.get<PaginatedResponse<T>>(url, {
+    const currentUrl: string = url;
+    const response = await client.get<PaginatedResponse<T>>(currentUrl, {
       params: pagesFetched === 0 ? params : undefined,
     });
     results.push(...response.data.values);
