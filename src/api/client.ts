@@ -67,9 +67,8 @@ export async function paginateAll<T>(
     results.push(...response.data.values);
 
     if (response.data.next) {
-      // next is an absolute URL — extract path+query to avoid baseURL concatenation
-      const nextUrl: URL = new URL(response.data.next);
-      currentPath = nextUrl.pathname + nextUrl.search;
+      // Pass the absolute next URL directly — axios skips baseURL for absolute URLs.
+      currentPath = response.data.next;
     } else {
       currentPath = undefined;
     }
