@@ -33,6 +33,7 @@ describe('requestChanges', () => {
       `/repositories/${workspace}/${repo}/pullrequests/42/approve`,
     );
     expect(result.approved).toBe(false);
+    expect(result.user).toBeNull();
   });
 });
 

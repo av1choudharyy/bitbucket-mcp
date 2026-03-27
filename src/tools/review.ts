@@ -3,7 +3,7 @@ import type { MergeResult } from '../api/types';
 
 export interface ApproveResult {
   approved: boolean;
-  user: string;
+  user: string | null;
 }
 
 export interface MergeInput {
@@ -42,7 +42,7 @@ export async function requestChanges(
   await client.delete(
     `/repositories/${workspace}/${repo}/pullrequests/${prId}/approve`,
   );
-  return { approved: false, user: '' };
+  return { approved: false, user: null };
 }
 
 export async function mergePullRequest(

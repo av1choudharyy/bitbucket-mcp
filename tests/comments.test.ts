@@ -81,8 +81,19 @@ describe('addPrInlineComment', () => {
       `/repositories/${workspace}/${repo}/pullrequests/42/comments`,
       expect.objectContaining({
         content: { raw: 'Fix this' },
-        inline: { path: 'src/foo.ts', to: 10 },
+        inline: { path: 'src/foo.ts', to: 10, line_type: 'ADDED' },
       }),
     );
+  });
+
+  it('omits line_type when not provided', async () => {
+    mockClient.post.mockResolvedValue({ data: inlineComment });
+    await addPrInlineComment(mockClient, workspace, repo, 42, {
+      content: 'Note',
+      path: 'src/bar.ts',
+      line: 5,
+    });
+    const call = mockClient.post.mock.calls[0][1];
+    expect(call.inline.line_type).toBeUndefined();
   });
 });

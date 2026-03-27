@@ -10,6 +10,10 @@ export interface RepoInfo {
   mainbranch: string | undefined;
 }
 
+function escapeQueryValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
 export async function listRepositories(
   client: ApiClient,
   workspace: string,
@@ -17,7 +21,7 @@ export async function listRepositories(
 ): Promise<RepoInfo[]> {
   const params: Record<string, string> = {};
   if (query) {
-    params.q = `name ~ "${query}"`;
+    params.q = `name ~ "${escapeQueryValue(query)}"`;
   }
 
   const repos = await paginateAll<BitbucketRepository>(

@@ -36,6 +36,10 @@ export interface UpdatePRInput {
   reviewers?: string[];
 }
 
+function escapeQueryValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
 function mapPRSummary(pr: BitbucketPR): PRSummary {
   return {
     id: pr.id,
@@ -62,10 +66,10 @@ export async function listPullRequests(
 
   const filters: string[] = [];
   if (options.author) {
-    filters.push(`author.nickname = "${options.author}"`);
+    filters.push(`author.nickname = "${escapeQueryValue(options.author)}"`);
   }
   if (options.branch) {
-    filters.push(`source.branch.name = "${options.branch}"`);
+    filters.push(`source.branch.name = "${escapeQueryValue(options.branch)}"`);
   }
   if (filters.length > 0) {
     params.q = filters.join(' AND ');

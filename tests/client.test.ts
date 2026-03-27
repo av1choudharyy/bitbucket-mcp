@@ -52,6 +52,8 @@ describe('paginateAll', () => {
     const results = await paginateAll(mockAxiosInstance as any, '/repos');
     expect(results).toEqual([{ id: 1 }, { id: 2 }]);
     expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2);
+    // Second call should use path+query only, not the full absolute URL
+    expect(mockAxiosInstance.get).toHaveBeenNthCalledWith(2, '/2.0/repos?page=2', expect.anything());
   });
 
   it('stops at page limit', async () => {

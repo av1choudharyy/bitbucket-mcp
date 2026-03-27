@@ -51,16 +51,23 @@ export async function paginateAll<T>(
   maxPages = 20,
 ): Promise<T[]> {
   const results: T[] = [];
-  let url: string | undefined = path;
+  let currentPath: string | undefined = path;
   let pagesFetched = 0;
 
-  while (url && pagesFetched < maxPages) {
-    const currentUrl: string = url;
-    const response = await client.get<PaginatedResponse<T>>(currentUrl, {
+  while (currentPath && pagesFetched < maxPages) {
+    const response: Awaited<ReturnType<typeof client.get<PaginatedResponse<T>>>> = await client.get<PaginatedResponse<T>>(currentPath, {
       params: pagesFetched === 0 ? params : undefined,
     });
     results.push(...response.data.values);
-    url = response.data.next;
+
+    if (response.data.next) {
+      // next is an absolute URL — extract path+query to avoid baseURL concatenation
+      const nextUrl: URL = new URL(response.data.next);
+      currentPath = nextUrl.pathname + nextUrl.search;
+    } else {
+      currentPath = undefined;
+    }
+
     pagesFetched++;
   }
 

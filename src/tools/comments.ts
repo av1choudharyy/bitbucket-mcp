@@ -64,9 +64,12 @@ export async function addPrInlineComment(
   prId: number,
   input: InlineCommentInput,
 ): Promise<CommentInfo> {
+  const inlineField: Record<string, unknown> = { path: input.path, to: input.line };
+  if (input.line_type) inlineField.line_type = input.line_type;
+
   const body: Record<string, unknown> = {
     content: { raw: input.content },
-    inline: { path: input.path, to: input.line },
+    inline: inlineField,
   };
 
   const response = await client.post<BitbucketComment>(
