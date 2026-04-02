@@ -36,7 +36,7 @@ Required scopes: `Repositories: Read`, `Pull requests: Write`
   "mcpServers": {
     "bitbucket": {
       "command": "node",
-      "args": ["C:/Users/achoudhary/source/repos/bitbucket-mcp/dist/index.js"],
+      "args": ["/path/to/bitbucket-mcp/dist/index.js"],
       "env": {
         "BITBUCKET_TOKEN": "your_token",
         "BITBUCKET_WORKSPACE": "your_workspace"

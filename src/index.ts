@@ -12,7 +12,7 @@ import {
   updatePullRequest,
 } from './tools/prs';
 import { getPullRequestDiff } from './tools/diff';
-import { listPrComments, addPrComment, addPrInlineComment } from './tools/comments';
+import { listPrComments, addPrComment, addPrInlineComment, deletePrComment } from './tools/comments';
 import { approvePullRequest, requestChanges, mergePullRequest } from './tools/review';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -248,6 +248,24 @@ type AnyFn = (...args: any[]) => unknown;
       try {
         const result = await requestChanges(client, workspace, repo, pr_id);
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: `Error: ${(err as Error).message}` }], isError: true };
+      }
+    },
+  );
+
+  tool(
+    'delete_pr_comment',
+    'Delete a comment on a pull request',
+    {
+      repo: z.string().min(1).describe('Repository slug'),
+      pr_id: z.number().int().positive().describe('Pull request ID'),
+      comment_id: z.number().int().positive().describe('Comment ID to delete'),
+    },
+    async ({ repo, pr_id, comment_id }: { repo: string; pr_id: number; comment_id: number }) => {
+      try {
+        await deletePrComment(client, workspace, repo, pr_id, comment_id);
+        return { content: [{ type: 'text', text: `Comment ${comment_id} deleted successfully.` }] };
       } catch (err) {
         return { content: [{ type: 'text', text: `Error: ${(err as Error).message}` }], isError: true };
       }

@@ -26,9 +26,11 @@ export function createClient(config: Config): ApiClient {
     (error: AxiosError) => {
       const status = error.response?.status;
       const data = error.response?.data as Record<string, unknown> | undefined;
+      const fallbackDetails = data ? JSON.stringify(data) : undefined;
       const message =
         (data?.error as { message?: string } | undefined)?.message ??
         (data?.message as string | undefined) ??
+        fallbackDetails ??
         error.message;
 
       if (status === 401) {
@@ -67,8 +69,9 @@ export async function paginateAll<T>(
     results.push(...response.data.values);
 
     if (response.data.next) {
-      // Pass the absolute next URL directly — axios skips baseURL for absolute URLs.
-      currentPath = response.data.next;
+      // Bitbucket returns an absolute URL; convert it to path+query so calls stay relative to baseURL.
+      const nextUrl = new URL(response.data.next);
+      currentPath = `${nextUrl.pathname}${nextUrl.search}`;
     } else {
       currentPath = undefined;
     }

@@ -24,13 +24,41 @@ export async function approvePullRequest(
   repo: string,
   prId: number,
 ): Promise<ApproveResult> {
-  const response = await client.post<{ approved: boolean; user: { display_name: string } }>(
-    `/repositories/${workspace}/${repo}/pullrequests/${prId}/approve`,
-  );
-  return {
-    approved: response.data.approved,
-    user: response.data.user?.display_name ?? null,
-  };
+  try {
+    const response = await client.post<{ approved?: boolean; user?: { display_name?: string } }>(
+      `/repositories/${workspace}/${repo}/pullrequests/${prId}/approve`,
+    );
+    return {
+      approved: response.data.approved ?? true,
+      user: response.data.user?.display_name ?? null,
+    };
+  } catch (err) {
+    const retryResponse = await (async () => {
+      try {
+        return await client.post<{ approved?: boolean; user?: { display_name?: string } }>(
+          `/repositories/${workspace}/${repo}/pullrequests/${prId}/approve`,
+          {},
+        );
+      } catch {
+        return null;
+      }
+    })();
+
+    if (retryResponse) {
+      return {
+        approved: retryResponse.data.approved ?? true,
+        user: retryResponse.data.user?.display_name ?? null,
+      };
+    }
+
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('Bitbucket API error 400')) {
+      throw new Error(
+        `Unable to approve PR. Bitbucket can reject approval when the authenticated user is the PR author, has already approved, or the token type does not support approval actions. (${message})`,
+      );
+    }
+    throw err;
+  }
 }
 
 export async function requestChanges(
@@ -42,7 +70,10 @@ export async function requestChanges(
   await client.delete(
     `/repositories/${workspace}/${repo}/pullrequests/${prId}/approve`,
   );
-  return { approved: false, user: null };
+  return {
+    approved: false,
+    user: null,
+  };
 }
 
 export async function mergePullRequest(
@@ -53,6 +84,7 @@ export async function mergePullRequest(
   input: MergeInput,
 ): Promise<MergeResultInfo> {
   const body: Record<string, unknown> = {
+    type: 'pullrequest',
     merge_strategy: input.merge_strategy ?? 'merge_commit',
   };
   if (input.message) body.message = input.message;

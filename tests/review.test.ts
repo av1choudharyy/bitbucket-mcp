@@ -17,7 +17,8 @@ describe('approvePullRequest', () => {
       data: { approved: true, user: { display_name: 'Alice', account_id: 'a1', nickname: 'alice' } },
     });
     const result = await approvePullRequest(mockClient, workspace, repo, 42);
-    expect(mockClient.post).toHaveBeenCalledWith(
+    expect(mockClient.post).toHaveBeenNthCalledWith(
+      1,
       `/repositories/${workspace}/${repo}/pullrequests/42/approve`,
     );
     expect(result.approved).toBe(true);

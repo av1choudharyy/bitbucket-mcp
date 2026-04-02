@@ -64,17 +64,59 @@ export async function addPrInlineComment(
   prId: number,
   input: InlineCommentInput,
 ): Promise<CommentInfo> {
-  const inlineField: Record<string, unknown> = { path: input.path, to: input.line };
-  if (input.line_type) inlineField.line_type = input.line_type;
+  const route = `/repositories/${workspace}/${repo}/pullrequests/${prId}/comments`;
 
-  const body: Record<string, unknown> = {
+  const payloads: Array<Record<string, unknown>> = [];
+
+  // Preferred payload: preserve caller intent and map REMOVED to `from`.
+  const preferredInline: Record<string, unknown> = { path: input.path };
+  if (input.line_type === 'REMOVED') preferredInline.from = input.line;
+  else preferredInline.to = input.line;
+  if (input.line_type) preferredInline.line_type = input.line_type;
+  payloads.push({ content: { raw: input.content }, inline: preferredInline });
+
+  // Fallback 1: same anchor but no line_type (some Bitbucket setups reject line_type).
+  const noLineTypeInline: Record<string, unknown> = { path: input.path };
+  if (input.line_type === 'REMOVED') noLineTypeInline.from = input.line;
+  else noLineTypeInline.to = input.line;
+  payloads.push({ content: { raw: input.content }, inline: noLineTypeInline });
+
+  // Fallback 2: force `to` anchor.
+  payloads.push({
     content: { raw: input.content },
-    inline: inlineField,
-  };
+    inline: { path: input.path, to: input.line },
+  });
 
-  const response = await client.post<BitbucketComment>(
-    `/repositories/${workspace}/${repo}/pullrequests/${prId}/comments`,
-    body,
+  // Fallback 3: force `from` anchor.
+  payloads.push({
+    content: { raw: input.content },
+    inline: { path: input.path, from: input.line },
+  });
+
+  let lastError: unknown;
+  for (let i = 0; i < payloads.length; i++) {
+    try {
+      const response = await client.post<BitbucketComment>(route, payloads[i]);
+      return mapComment(response.data);
+    } catch (err) {
+      lastError = err;
+      const message = err instanceof Error ? err.message : String(err);
+      const shouldRetry = message.includes('Bitbucket API error 400') && i < payloads.length - 1;
+      if (!shouldRetry) throw err;
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Failed to add inline PR comment');
+}
+
+export async function deletePrComment(
+  client: ApiClient,
+  workspace: string,
+  repo: string,
+  prId: number,
+  commentId: number,
+): Promise<void> {
+  await client.delete(
+    `/repositories/${workspace}/${repo}/pullrequests/${prId}/comments/${commentId}`,
   );
-  return mapComment(response.data);
 }
